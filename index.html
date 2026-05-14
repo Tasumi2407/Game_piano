@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego Musical</title>
+
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Phaser -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
+</head>
+<body>
+    <div id="file-warning" hidden>
+        Abre este juego desde http://127.0.0.1:4173 usando iniciar-juego.cmd. Si lo abres como archivo, Chrome bloquea los sonidos y el MIDI.
+    </div>
+
+    <header class="game-header">
+        <div>
+            <h1>Juego Musical</h1>
+            <p>Lee la nota, toca el piano y prepara el camino del personaje.</p>
+        </div>
+        <div class="status-pill">MIDI + Piano</div>
+    </header>
+
+    <main class="game-shell">
+        <section class="stage-panel" aria-label="Zona del juego">
+            <div id="game-container"></div>
+        </section>
+
+        <section class="piano-panel" aria-label="Piano virtual">
+            <div class="piano-toolbar">
+                <span>Piano</span>
+                <button id="toggleLabelsButton" type="button">Etiquetas</button>
+            </div>
+            <div id="piano"></div>
+        </section>
+    </main>
+
+    <script src="js/tonejs.js"></script>
+    <script src="js/piano-app.js"></script>
+    <script src="js/game.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,188 @@
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    min-height: 100%;
+    margin: 0;
+}
+
+body {
+    min-height: 100vh;
+    overflow: hidden;
+    background: #121a28;
+    color: #f7f9fc;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.game-header {
+    height: 76px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 0 28px;
+    background: #1d293f;
+    border-bottom: 1px solid #31415f;
+}
+
+.game-header h1 {
+    margin: 0;
+    font-size: 26px;
+    line-height: 1;
+}
+
+.game-header p {
+    margin: 8px 0 0;
+    color: #b8c4d6;
+    font-size: 14px;
+}
+
+.status-pill {
+    padding: 10px 14px;
+    border: 1px solid #415678;
+    border-radius: 999px;
+    color: #dbe7ff;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.game-shell {
+    height: calc(100vh - 76px);
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 16px;
+    padding: 16px;
+}
+
+.stage-panel {
+    min-height: 0;
+    overflow: hidden;
+    background: #d8d8d8;
+    border: 2px solid #28364f;
+}
+
+#game-container {
+    width: 100%;
+    height: 100%;
+}
+
+canvas {
+    display: block;
+}
+
+.piano-panel {
+    overflow-x: auto;
+    overflow-y: hidden;
+    background: #1d293f;
+    border: 2px solid #000;
+}
+
+.piano-toolbar {
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    border-bottom: 1px solid #30415f;
+    color: #f7f9fc;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+#toggleLabelsButton {
+    min-width: 96px;
+    height: 28px;
+    border: 1px solid #5d7296;
+    border-radius: 6px;
+    background: #001a49;
+    color: white;
+    cursor: pointer;
+}
+
+#piano {
+    display: flex;
+    justify-content: flex-start;
+    align-items: stretch;
+    width: max-content;
+    min-width: 100%;
+    height: 194px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.key {
+    width: 54px;
+    height: 190px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    flex: 0 0 auto;
+    margin: 2px;
+    border: 1px solid #000;
+    background: #fff;
+    color: #000;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1.15;
+    user-select: none;
+}
+
+.key.black {
+    position: relative;
+    z-index: 1;
+    width: 40px;
+    height: 126px;
+    margin: 2px -20px 0;
+    align-items: center;
+    background: #000;
+    color: #fff;
+}
+
+.key.active,
+.key:active {
+    background: #f3d45d;
+}
+
+.key.black.active,
+.key.black:active {
+    background: #d8b800;
+    color: #111;
+}
+
+.key-label {
+    display: block;
+    padding: 0 0 8px;
+    text-align: center;
+    pointer-events: none;
+}
+
+.key.black .key-label {
+    padding: 0;
+}
+
+.keyboard {
+    display: inline;
+    font-weight: 700;
+}
+
+#file-warning {
+    position: fixed;
+    inset: 24px;
+    z-index: 10;
+    display: grid;
+    place-items: center;
+    padding: 32px;
+    background: #fff3d6;
+    border: 2px solid #b87900;
+    color: #2c220f;
+    font-size: 22px;
+    line-height: 1.4;
+    text-align: center;
+}
+
+#file-warning[hidden] {
+    display: none;
+}
