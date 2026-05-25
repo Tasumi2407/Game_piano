@@ -15,9 +15,32 @@ if (window.location.protocol === 'file:') {
     throw new Error('Abre el juego desde http://127.0.0.1:4173, no como archivo file://.');
 }
 
-// Notas que pueden caer. Estas son los carriles del MVP.
-// Si quieres cambiar las notas del juego, normalmente empiezas aqui.
-const FALLING_NOTES = ['F2'];
+// Canciones disponibles para el jugador.
+// Para agregar otra, copia un bloque y cambia id, name y notes.
+const SONGS = [
+    {
+        id: 'practica-f2',
+        name: 'Practica F2',
+        notes: ['F2', 'F2', 'F2', 'F2']
+    },
+    {
+        id: 'subida-simple',
+        name: 'Subida simple',
+        notes: ['C3', 'D3', 'E3', 'F3', 'G3', 'A3', 'B3', 'C4']
+    },
+    {
+        id: 'estrellita',
+        name: 'Estrellita',
+        notes: ['C3', 'C3', 'G3', 'G3', 'A3', 'A3', 'G3', 'F3', 'F3', 'E3', 'E3', 'D3', 'D3', 'C3']
+    },
+    {
+        id: 'Mario Bros',
+        name: 'Mario Bros',
+        notes: ['E4', 'E4', 'E4','C4', 'E4', 'G4','G3','C4', 'G3', 'E3','A3', 'B3', 'A#3', 'A3','G3', 'E4', 'G4', 'A4','F4', 'G4','E4', 'C4', 'D4', 'B3']
+    }
+];
+
+const DEFAULT_SONG_ID = SONGS[0].id;
 
 // Tempo inicial. El jugador puede cambiarlo con los botones + y -.
 const DEFAULT_BPM = 80;
@@ -37,6 +60,36 @@ const BASE_NOTE_SPEED = 180;
 // Mas grande = mas facil. Mas pequeno = mas dificil.
 const HIT_WINDOW = 44;
 
+function getSongById(songId) {
+    return SONGS.find((song) => song.id === songId) || SONGS[0];
+}
+
+function getUniqueSongNotes(song) {
+    return [...new Set(song.notes.length ? song.notes : SONGS[0].notes)];
+}
+
+function setupSongSelect() {
+    const songSelect = document.getElementById('songSelect');
+
+    if (!songSelect) {
+        return;
+    }
+
+    SONGS.forEach((song) => {
+        const option = document.createElement('option');
+        option.value = song.id;
+        option.textContent = song.name;
+        songSelect.appendChild(option);
+    });
+
+    songSelect.value = DEFAULT_SONG_ID;
+    songSelect.addEventListener('change', () => {
+        window.dispatchEvent(new CustomEvent('song-selected', {
+            detail: { songId: songSelect.value }
+        }));
+    });
+}
+
 class PianoGameScene extends Phaser.Scene {
     /**
      * Constructor de la escena.
@@ -51,6 +104,10 @@ class PianoGameScene extends Phaser.Scene {
 
         // Lista de notas que estan cayendo en este momento.
         this.fallingNotes = [];
+
+        // Cancion activa y posicion actual dentro de su lista de notas.
+        this.activeSong = getSongById(DEFAULT_SONG_ID);
+        this.songNoteIndex = 0;
 
         // Puntaje actual.
         this.score = 0;
@@ -83,6 +140,9 @@ class PianoGameScene extends Phaser.Scene {
 
         // Coordenada Y donde nacen las notas.
         this.spawnY = 78;
+
+        this.songChangeHandler = null;
+        this.pianoInputBound = false;
     }
 
     /**
@@ -90,11 +150,13 @@ class PianoGameScene extends Phaser.Scene {
      * Aqui se dibuja el escenario, se conectan eventos y empieza el spawner.
      */
     create() {
+        this.resetGameState();
         this.drawStage();
         this.drawLanes();
         this.drawHud();
         this.drawControls();
         this.bindPianoInput();
+        this.bindSongSelect();
         this.setTempo(DEFAULT_BPM);
         this.startSpawner();
     }
@@ -113,6 +175,21 @@ class PianoGameScene extends Phaser.Scene {
         this.updateFallingNotes(delta);
     }
 
+    resetGameState() {
+        const songSelect = document.getElementById('songSelect');
+
+        this.activeSong = getSongById(songSelect ? songSelect.value : DEFAULT_SONG_ID);
+        this.songNoteIndex = 0;
+        this.lanes = [];
+        this.fallingNotes = [];
+        this.score = 0;
+        this.health = 5;
+        this.bpm = DEFAULT_BPM;
+        this.noteSpeed = BASE_NOTE_SPEED;
+        this.isPaused = false;
+        this.spawnTimer = null;
+    }
+
     /**
      * Dibuja el fondo general del area de juego.
      */
@@ -128,22 +205,24 @@ class PianoGameScene extends Phaser.Scene {
     }
 
     /**
-     * Dibuja los carriles. Cada carril corresponde a una nota de FALLING_NOTES.
+     * Dibuja los carriles. Cada carril corresponde a una nota de la cancion.
      */
     drawLanes() {
+        const songNotes = getUniqueSongNotes(this.activeSong);
+
         // Ancho visual de cada carril.
-        const laneWidth = 170;
+        const laneWidth = Phaser.Math.Clamp(780 / songNotes.length, 72, 170);
 
         // Separacion entre carriles.
-        const laneGap = 28;
+        const laneGap = 18;
 
         // Ancho total de todos los carriles juntos.
-        const totalWidth = FALLING_NOTES.length * laneWidth + (FALLING_NOTES.length - 1) * laneGap;
+        const totalWidth = songNotes.length * laneWidth + (songNotes.length - 1) * laneGap;
 
         // X inicial para centrar los carriles.
         const startX = (GAME_WIDTH - totalWidth) / 2;
 
-        FALLING_NOTES.forEach((note, index) => {
+        songNotes.forEach((note, index) => {
             // X del carril actual.
             const x = startX + index * (laneWidth + laneGap);
 
@@ -157,7 +236,7 @@ class PianoGameScene extends Phaser.Scene {
             this.add.text(centerX, 112, note, {
                 color: '#1f1f1f',
                 fontFamily: 'Arial',
-                fontSize: '24px',
+                fontSize: songNotes.length > 8 ? '18px' : '24px',
                 fontStyle: 'bold'
             }).setOrigin(0.5, 0);
 
@@ -186,6 +265,13 @@ class PianoGameScene extends Phaser.Scene {
             color: '#202020',
             fontFamily: 'Arial',
             fontSize: '26px',
+            fontStyle: 'bold'
+        });
+
+        this.add.text(56, 50, this.activeSong.name, {
+            color: '#42526c',
+            fontFamily: 'Arial',
+            fontSize: '15px',
             fontStyle: 'bold'
         });
 
@@ -275,6 +361,12 @@ class PianoGameScene extends Phaser.Scene {
      * piano-app.js ya detecta MIDI y emite eventos globales.
      */
     bindPianoInput() {
+        if (this.pianoInputBound) {
+            return;
+        }
+
+        this.pianoInputBound = true;
+
         // Evento cuando se toca una nota.
         window.addEventListener('piano-note-on', (event) => {
             const { note, source } = event.detail;
@@ -285,6 +377,19 @@ class PianoGameScene extends Phaser.Scene {
         window.addEventListener('piano-note-off', (event) => {
             this.lastInputText.setText(`Ultima nota: ${event.detail.note} (soltada)`);
         });
+    }
+
+    bindSongSelect() {
+        if (this.songChangeHandler) {
+            return;
+        }
+
+        this.songChangeHandler = (event) => {
+            this.activeSong = getSongById(event.detail.songId);
+            this.scene.restart();
+        };
+
+        window.addEventListener('song-selected', this.songChangeHandler);
     }
 
     /**
@@ -361,17 +466,27 @@ class PianoGameScene extends Phaser.Scene {
     }
 
     /**
-     * Crea una nota nueva en un carril aleatorio.
+     * Crea la siguiente nota de la cancion activa.
      */
     spawnFallingNote() {
-        // Escoge un carril al azar de los carriles existentes.
-        const lane = Phaser.Utils.Array.GetRandom(this.lanes);
+        if (!this.activeSong.notes.length) {
+            return;
+        }
+
+        const note = this.activeSong.notes[this.songNoteIndex];
+        const lane = this.lanes.find((currentLane) => currentLane.note === note);
+
+        this.songNoteIndex = (this.songNoteIndex + 1) % this.activeSong.notes.length;
+
+        if (!lane) {
+            return;
+        }
 
         // Circulo visual de la nota.
         const circle = this.add.circle(lane.centerX, this.spawnY, 28, 0x222222).setStrokeStyle(4, 0xffffff);
 
         // Texto dentro del circulo, por ejemplo F2.
-        const label = this.add.text(lane.centerX, this.spawnY, lane.note, {
+        const label = this.add.text(lane.centerX, this.spawnY, note, {
             color: '#ffffff',
             fontFamily: 'Arial',
             fontSize: '18px',
@@ -380,7 +495,7 @@ class PianoGameScene extends Phaser.Scene {
 
         // Guardamos la nota en el arreglo de notas activas.
         this.fallingNotes.push({
-            note: lane.note,
+            note,
             lane,
             circle,
             label,
@@ -538,6 +653,8 @@ const config = {
     // Escena principal.
     scene: PianoGameScene
 };
+
+setupSongSelect();
 
 // Aqui arranca Phaser.
 new Phaser.Game(config);
