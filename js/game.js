@@ -113,7 +113,7 @@ class PianoGameScene extends Phaser.Scene {
         this.score = 0;
 
         // Vida actual del jugador.
-        this.health = 5;
+        this.health = 10;
 
         // Tempo actual del juego.
         this.bpm = DEFAULT_BPM;
@@ -183,7 +183,7 @@ class PianoGameScene extends Phaser.Scene {
         this.lanes = [];
         this.fallingNotes = [];
         this.score = 0;
-        this.health = 5;
+        this.health = 10;
         this.bpm = DEFAULT_BPM;
         this.noteSpeed = BASE_NOTE_SPEED;
         this.isPaused = false;
