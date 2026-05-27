@@ -42,28 +42,9 @@ Eso mantiene el juego simple.
 3. Al tocar la nota correcta, crear un sprite en Phaser.
 4. Mover el personaje hacia el sprite.
 5. Al tocar una nota incorrecta, restar vida.
-6. Cuando la vida llegue a cero, mostrar pantalla de derrota.
-7. Cuando termine la secuencia, mostrar pantalla de victoria.
 
-## Donde agregar el personaje
 
-El personaje debe vivir en `js/game.js`, dentro de la escena Phaser.
 
-Ejemplo conceptual:
-
-```js
-this.player = this.add.sprite(80, 360, 'player');
-```
-
-Luego, cuando haya un acierto:
-
-```js
-this.tweens.add({
-    targets: this.player,
-    x: nextSprite.x,
-    y: nextSprite.y,
-    duration: 400
-});
 ```
 
 ## Donde cambiar el piano
